@@ -1,0 +1,420 @@
+<script type="text/x-red" data-template-name="awsiot in">
+    <div class="form-row">
+        <label for="node-input-broker"><i class="fa fa-globe"></i> <span data-i18n="awsiot.label.broker"></span></label>
+        <input type="text" id="node-input-broker">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> <span data-i18n="common.label.topic"></span></label>
+        <input type="text" id="node-input-topic" data-i18n="[placeholder]common.label.topic">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]common.label.name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="awsiot in">
+    <p>Connects to a broker and subscribes to the specified topic.</p>
+    <p>Outputs a message with the properties:</p>
+    <ul>
+       <li><code>msg.topic</code></li>
+       <li><code>msg.payload</code></li>
+       <li><code>msg.qos</code></li>
+       <li><code>msg.retain</code></li>
+    </ul>
+    <p><code>msg.payload</code> will be a String, unless it is detected as a binary buffer.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('awsiot in',{
+        category: 'input',
+        defaults: {
+            name: {value:""},
+            topic: {value:"",required:true,validate: RED.validators.regex(/^(#$|(\+|[^+#]*)(\/(\+|[^+#]*))*(\/(\+|#|[^+#]*))?$)/)},
+            broker: {type:"awsiot-broker", required:true}
+        },
+        color:"#ff9900",
+        inputs:0,
+        outputs:1,
+        icon: "bridge.png",
+        label: function() {
+            return this.name||this.topic||"aws-iot";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="awsiot out">
+    <div class="form-row">
+        <label for="node-input-broker"><i class="fa fa-globe"></i> <span data-i18n="awsiot.label.broker"></span></label>
+        <input type="text" id="node-input-broker">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topic"><i class="fa fa-tasks"></i> <span data-i18n="common.label.topic"></span></label>
+        <input type="text" id="node-input-topic" data-i18n="[placeholder]common.label.topic">
+    </div>
+    <div class="form-row">
+        <label for="node-input-qos"><i class="fa fa-empire"></i> <span data-i18n="awsiot.label.qos"></span></label>
+        <select id="node-input-qos" style="width:125px !important">
+            <option value=""></option>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+        </select>
+        &nbsp;&nbsp;<i class="fa fa-history"></i>&nbsp;<span data-i18n="awsiot.retain"></span> &nbsp;<select id="node-input-retain" style="width:125px !important">
+            <option value=""></option>
+            <option value="false" data-i18n="awsiot.false"></option>
+            <option value="true" data-i18n="awsiot.true"></option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]common.label.name">
+    </div>
+    <div class="form-tips"><span data-i18n="awsiot.tip"></span></div>
+</script>
+
+<script type="text/x-red" data-help-name="awsiot out">
+    <p>Connects to a MQTT broker using WebSockets and publishes messages.</p>
+    <p>The topic used can be configured in the node or, if left blank, can be set
+       by <code>msg.topic</code>.</p>
+    <p>Likewise the QoS and retain values can be configured in the node or, if left
+       blank, set by <code>msg.qos</code> and <code>msg.retain</code> respectively.
+       By default, messages are published at QoS 0 with the retain flag set to false.</p>
+    <p>If <code>msg.payload</code> contains an object it will be converted to JSON
+       before being sent.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('awsiot out',{
+        category: 'output',
+        defaults: {
+            name: {value:""},
+            topic: {value:""},
+            qos: {value:""},
+            retain: {value:""},
+            broker: {type:"awsiot-broker", required:true}
+        },
+        color:"#ff9900",
+        inputs:1,
+        outputs:0,
+        icon: "bridge.png",
+        align: "right",
+        label: function() {
+            return this.name||this.topic||"aws-iot";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="awsiot-broker">
+    <div class="form-row">
+        <ul style="background: #fff; min-width: 600px; margin-bottom: 20px;" id="node-config-awsiot-broker-tabs"></ul>
+    </div>
+    <div id="node-config-awsiot-broker-tabs-content" style="min-height: 170px;">
+        <div id="awsiot-broker-tab-connection" style="display:none">
+            <div class="form-row node-input-region">
+                <label for="node-config-input-region"><i class="fa fa-globe"></i> <span data-i18n="awsiot.label.region"></span></label>
+                <input class="input-append-left" type="text" id="node-config-input-region" placeholder="region" style="width: 40%;" >
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-clientid"><i class="fa fa-tag"></i> <span data-i18n="awsiot.label.clientid"></span></label>
+                <input type="text" id="node-config-input-clientid" data-i18n="[placeholder]awsiot.placeholder.clientid">
+            </div>
+
+            <div class="form-row">
+                <label for="node-config-input-keepalive" style="width: auto"><i class="fa fa-clock-o"></i> <span data-i18n="awsiot.label.keepalive"></span></label>
+                <input type="text" id="node-config-input-keepalive" style="width: 50px">
+                <input type="checkbox" id="node-config-input-cleansession" style="margin-left: 30px; height: 1em;display: inline-block; width: auto; vertical-align: middle;">
+                <label for="node-config-input-cleansession" style="width: auto;" data-i18n="awsiot.label.cleansession"></label>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="node-config-input-compatmode" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-config-input-compatmode" style="width: auto;" data-i18n="awsiot.label.compatmode"></label>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="node-config-input-usewss" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-config-input-usewss" style="width: auto;" data-i18n="awsiot.label.usewss"></label>
+            </div>
+        </div>
+        <div id="awsiot-broker-tab-security" style="display:none">
+            <div class="form-row">
+                <label for="node-config-input-accessKeyId"><i class="fa fa-user"></i> <span data-i18n="common.label.accessKeyId"></span></label>
+                <input type="text" id="node-config-input-accessKeyId">
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-secretKey"><i class="fa fa-lock"></i> <span data-i18n="common.label.secretKey"></span></label>
+                <input type="password" id="node-config-input-secretKey">
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="node-config-input-usetls" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-config-input-usetls" style="width: 70%;" data-i18n="awsiot.label.use-tls"></label>
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="node-config-input-verifyservercert" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-config-input-verifyservercert" style="width: 70%;" data-i18n="awsiot.label.verify-server-cert"></label>
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-certdir"><i class="fa fa-user"></i> <span data-i18n="awsiot.label.certdir"></span></label>
+                <input type="text" id="node-config-input-certdir">
+            </div>
+        </div>
+        <div id="awsiot-broker-tab-birth" style="display:none">
+            <div class="form-row">
+                <label for="node-config-input-birthTopic"><i class="fa fa-tasks"></i> <span data-i18n="common.label.topic"></span></label>
+                <input type="text" id="node-config-input-birthTopic" data-i18n="[placeholder]awsiot.placeholder.birth-topic">
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-birthQos"><i class="fa fa-empire"></i> <span data-i18n="awsiot.label.qos"></span></label>
+                <select id="node-config-input-birthQos" style="width:125px !important">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                </select>
+                &nbsp;&nbsp;<i class="fa fa-history"></i>&nbsp;<span data-i18n="awsiot.retain"></span> &nbsp;<select id="node-config-input-birthRetain" style="width:125px !important">
+                    <option value="false" data-i18n="awsiot.false"></option>
+                    <option value="true" data-i18n="awsiot.true"></option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-birthPayload"><i class="fa fa-envelope"></i> <span data-i18n="common.label.payload"></span></label>
+                <input type="text" id="node-config-input-birthPayload" data-i18n="[placeholder]common.label.payload">
+            </div>
+        </div>
+        <div id="awsiot-broker-tab-will" style="display:none">
+            <div class="form-row">
+                <label for="node-config-input-willTopic"><i class="fa fa-tasks"></i> <span data-i18n="common.label.topic"></span></label>
+                <input type="text" id="node-config-input-willTopic" data-i18n="[placeholder]awsiot.placeholder.will-topic">
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-willQos"><i class="fa fa-empire"></i> <span data-i18n="awsiot.label.qos"></span></label>
+                <select id="node-config-input-willQos" style="width:125px !important">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                </select>
+                &nbsp;&nbsp;<i class="fa fa-history"></i>&nbsp;<span data-i18n="awsiot.retain"></span> &nbsp;<select id="node-config-input-willRetain" style="width:125px !important">
+                    <option value="false" data-i18n="awsiot.false"></option>
+                    <option value="true" data-i18n="awsiot.true"></option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-willPayload"><i class="fa fa-envelope"></i> <span data-i18n="common.label.payload"></span></label>
+                <input type="text" id="node-config-input-willPayload" data-i18n="[placeholder]common.label.payload">
+            </div>
+        </div>
+        <div id="awsiot-broker-tab-proxy" style="display:none">
+            <div class="form-row">
+                <input type="checkbox" id="node-config-input-useproxy" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-config-input-useproxy" style="width: 70%;" data-i18n="awsiot.label.use-proxy"></label>
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-proxyhost"><i class="fa fa-user"></i> <span data-i18n="common.label.proxyhost"></span></label>
+                <input type="text" id="node-config-input-proxyhost">
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-secretKey"><i class="fa fa-lock"></i> <span data-i18n="common.label.proxyport"></span></label>
+                <input type="text" id="node-config-input-proxyport">
+            </div>
+            <div class="form-row">
+                <input type="checkbox" id="node-config-input-proxyauth" style="display: inline-block; width: auto; vertical-align: top;">
+                <label for="node-config-input-proxyauth" style="width: 70%;" data-i18n="awsiot.label.proxy-auth"></label>
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-proxyuser"><i class="fa fa-lock"></i> <span data-i18n="common.label.proxyuser"></span></label>
+                <input type="text" id="node-config-input-proxyuser">
+            </div>
+            <div class="form-row">
+                <label for="node-config-input-proxypassword"><i class="fa fa-lock"></i> <span data-i18n="common.label.proxypassword"></span></label>
+                <input type="password" id="node-config-input-proxypassword">
+            </div>
+        </div>
+    </div>
+
+
+
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('awsiot-broker',{
+        category: 'config',
+        defaults: {
+            region: {value: "eu-central-1", required: true},
+            clientid: { value:"", validate: function(v) {
+                if ($("#node-config-input-clientid").length) {
+                    // Currently editing the node
+                    return $("#node-config-input-cleansession").is(":checked") || v.length > 0;
+                } else {
+                    return this.cleansession || v.length > 0;
+                }
+            }},
+            usetls: {value: false},
+            certdir: {value: "certs"},
+            useproxy: {value: false},
+            proxyauth: {value: false},
+            proxyhost: {value: "", validate: function(v) {
+            	return !$("#node-config-input-useproxy").is(":checked") || v.length > 0
+            }},
+            proxyport: {value: "", validate: function(v) {
+            	return !$("#node-config-input-useproxy").is(":checked") || v.length > 0
+            }},
+            proxyuser: {value: "", validate: function(v) {
+            	return !$("#node-config-input-proxyauth").is(":checked") || v.length > 0
+            }},
+            proxypassword: {value: "", validate: function(v) {
+            	return !$("#node-config-input-proxyauth").is(":checked") || v.length > 0
+            }},
+            verifyservercert: { value: ""},
+            compatmode: { value: true},
+            usewss: { value: false},
+            keepalive: {value:60,validate:RED.validators.number()},
+            cleansession: {value: true},
+            willTopic: {value:""},
+            willQos: {value:"0"},
+            willRetain: {value:false},
+            willPayload: {value:""},
+            birthTopic: {value:""},
+            birthQos: {value:"0"},
+            birthRetain: {value:false},
+            birthPayload: {value:""}
+        },
+        credentials: {
+            accessKeyId: {type:"text"},
+            secretKey: {type: "password"}
+        },
+        label: function() {
+            if (this.region == "") { this.region = "eu-central-1"; }
+            return "AWS on " + this.region;
+        },
+        oneditprepare: function () {
+            var tabs = RED.tabs.create({
+                id: "node-config-awsiot-broker-tabs",
+                onchange: function(tab) {
+                    $("#node-config-awsiot-broker-tabs-content").children().hide();
+                    $("#" + tab.id).show();
+                }
+            });
+            tabs.addTab({
+                id: "awsiot-broker-tab-connection",
+                label: this._("awsiot.tabs-label.connection")
+            });
+            tabs.addTab({
+                id: "awsiot-broker-tab-security",
+                label: this._("awsiot.tabs-label.security")
+            });
+            tabs.addTab({
+                id: "awsiot-broker-tab-birth",
+                label: this._("awsiot.tabs-label.birth")
+            });
+            tabs.addTab({
+                id: "awsiot-broker-tab-will",
+                label: this._("awsiot.tabs-label.will")
+            });
+            tabs.addTab({
+                id: "awsiot-broker-tab-proxy",
+                label: this._("awsiot.tabs-label.proxy")
+            });
+            setTimeout(function() { tabs.resize()},0);
+            if (typeof this.cleansession === 'undefined') {
+                this.cleansession = true;
+                $("#node-config-input-cleansession").prop("checked",true);
+            }
+            if (typeof this.usetls  === 'undefined'){
+                this.usetls = false;
+                $("#node-config-input-usetls").prop("checked",false);
+            }
+            if (typeof this.verifyservercert  === 'undefined'){
+                this.verifyservercert = true;
+                $("#node-config-input-verifyservercert").prop("checked",true);
+            }
+            if (typeof this.compatmode  === 'undefined'){
+                this.compatmode = true;
+                $("#node-config-input-compatmode").prop('checked', true);
+            }
+            if (typeof this.usewss  === 'undefined'){
+                this.usewss = true;
+                $("#node-config-input-usewss").prop('checked', false);
+            }
+            if (typeof this.keepalive  === 'undefined'){
+                this.keepalive = 15;
+                $("#node-config-input-keepalive").val(this.keepalive);
+            }
+            if (typeof this.willQos === 'undefined') {
+                this.willQos = "0";
+                $("#node-config-input-willQos").val("0");
+            }
+            if (typeof this.birthQos === 'undefined') {
+                this.birthQos = "0";
+                $("#node-config-input-birthQos").val("0");
+            }
+
+            function updateTLSOptions() {
+                if ($("#node-config-input-usetls").is(':checked')) {
+                    $("#node-config-input-verifyservercert").prop("disabled", false);
+                    $("#node-config-input-certdir").prop("disabled", false);
+                    $("#node-config-input-verifyservercert").next().css("color","");
+                } else {
+                    $("#node-config-input-verifyservercert").prop("disabled", true);
+                    $("#node-config-input-certdir").prop("disabled", true);
+                    $("#node-config-input-verifyservercert").next().css("color","#aaa");
+                }
+            }
+            updateTLSOptions();
+            $("#node-config-input-usetls").on("click",function() {
+                updateTLSOptions();
+            });
+            
+        	function updateProxyCredentials() {
+        		if ($("#node-config-input-proxyauth").is(':checked')) {
+                    $("#node-config-input-proxyuser").prop("disabled", false);
+                    $("#node-config-input-proxypassword").prop("disabled", false);
+                } else {
+                	$("#node-config-input-proxyuser").prop("disabled", true);
+                    $("#node-config-input-proxypassword").prop("disabled", true);
+                }
+        	}
+            function updateProxyOptions() {
+
+                if ($("#node-config-input-useproxy").is(':checked')) {
+                    $("#node-config-input-proxyhost").prop("disabled", false);
+                    $("#node-config-input-proxyport").prop("disabled", false);
+                    $("#node-config-input-proxyauth").prop("disabled", false);
+                    updateProxyCredentials()
+                } else {
+                	$("#node-config-input-proxyauth").prop("disabled", true);
+                    $("#node-config-input-proxyhost").prop("disabled", true);
+                    $("#node-config-input-proxyport").prop("disabled", true);
+                    $("#node-config-input-proxyuser").prop("disabled", true);
+                    $("#node-config-input-proxypassword").prop("disabled", true);
+                }
+            }
+            updateProxyOptions();
+            $("#node-config-input-useproxy").on("click",function() {
+                updateProxyOptions();
+            });
+            $("#node-config-input-proxyauth").on("click",function() {
+            	updateProxyCredentials();
+            });
+            
+            
+            
+            var node = this;
+            function updateClientId() {
+                if ($("#node-config-input-cleansession").is(":checked")) {
+                    $("#node-config-input-clientid").attr("placeholder",node._("awsiot.placeholder.clientid"));
+                } else {
+                    $("#node-config-input-clientid").attr("placeholder",node._("awsiot.placeholder.clientid-nonclean"));
+                }
+                $("#node-config-input-clientid").change();
+            }
+            setTimeout(updateClientId,0);
+            $("#node-config-input-cleansession").on("click",function() {
+                updateClientId();
+            });
+        }
+    });
+</script>
