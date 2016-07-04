@@ -1,14 +1,15 @@
 {
-	  "name": "node-awsiot",
-	  "description": "Node for AWS MQTT server",
-	  "version": "0.1.0",
-	  "author": "Teddy Chambard",
-	  "node-red": {
-		  "nodes": {
-			  "awsiot": "awsiot.js"
-		  }
-	  },
-	  "dependencies": {
-		    "aws-iot-device-sdk": "^1.0.12"
-	  }
+  "name": "node-awsiot",
+  "description": "Node for AWS MQTT server",
+  "version": "0.1.0",
+  "author": "Teddy Chambard",
+  "node-red": {
+    "nodes": {
+      "awsiot": "awsiot.js"
+    }
+  },
+  "dependencies": {
+    "aws-iot-device-sdk": "^1.0.12",
+    "proxy-agent": "^2.0.0"
+  }
 }

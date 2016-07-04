@@ -127,20 +127,12 @@ module.exports = function(RED) {
 
 	    // Handle certificate management
         this.trace;// = console.error;
-	    var certDir = require('path').resolve(__dirname + "/../../../../../../" + this.certdir);
-	    var KEY = fs.readFileSync(certDir + '/private.pem.key');
-	    var CERT = fs.readFileSync(certDir + '/certificate.pem.crt');
-	    var TRUSTED_CA_LIST = fs.readFileSync(certDir + '/root-CA.crt');
 	    
 	    this.options.debug = false;
 	    if (this.usewss) {
 	    	if (!this.accessKeyId || !this.secretKey) {
 	    		throw new Error("accessKeyId and secretKey are mandatory for wss protocol usage !");
 	    	}
-		    this.options.privateKey = KEY;
-		    this.options.clientCert = CERT;
-		    this.options.caCert = TRUSTED_CA_LIST;
-
 	        this.options.protocol = 'wss';
 	        this.options.accessKeyId = this.accessKeyId;
 	        this.options.secretKey = this.secretKey;
@@ -155,6 +147,10 @@ module.exports = function(RED) {
 				};
 			}
 	    } else {
+            var certDir = require('path').resolve(__dirname + "/../../../../../../" + this.certdir);
+            var KEY = fs.readFileSync(certDir + '/private.pem.key');
+            var CERT = fs.readFileSync(certDir + '/certificate.pem.crt');
+            var TRUSTED_CA_LIST = fs.readFileSync(certDir + '/root-CA.crt');
 		    this.options.key = KEY;
 		    this.options.cert = CERT;
 		    this.options.ca = TRUSTED_CA_LIST;
